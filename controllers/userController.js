@@ -127,7 +127,7 @@ const deleteFriend = async (req, res) => {
         const friendExists = await User.findOne({ _id: req.params.friendId });
         // add check to see if friend is in user's friend list? 
         if (friendExists) {
-            const updatedUser = await User.updateOne({ _id: req.params.userId }, { $pullAll: { friends: [{ _id: req.params.friendId }] } }, {new: true}, function (err) {
+            const updatedUser = await User.findOneAndUpdate({ _id: req.params.userId }, { $pullAll: { friends: [{ _id: req.params.friendId }] } }, {new: true}, function (err) {
                 if (err) {
                     res.status(404).json({ message: `could not find user ${req.params.userId}, but friend exists, or maybe they're not friends` })
                 } else {

@@ -1,4 +1,5 @@
 const Thought = require('../models/Thought');
+const User = require('../models/User');
 
 // setup functions for user api
 
@@ -58,11 +59,85 @@ const newThought = async (req, res) => {
 }
 
 // put update by id
+// /api/thoughts/update/:thoughtId
+/*
+req.body = {
+    thoughtText: "The example thought text"
+    username: "billyBob"
+}
+*/
+const updateThought = async (req, res) => {
+    try {
+        console.log(req.body);
+        const updatedThought = await Thought.findOneAndUpdate({ _id: req.params.thoughtId }, { $set: req.body }, { runValidators: true, new: true });
+        if (!updatedThought) {
+            res.status(400).json({ message: 'could not update thought', body: req.body })
+        } else {
+            console.log('thought updated')
+            res.status(200).json(updatedThought);
+        }
+    } catch (err) {
+        res.status(500).json(err);
+    }
+}
+
 // delete by id
+// /api/thoughts/delete/:thoughtId
+const deleteThought = async (req, res) => {
+    try {
+        console.log(`deleting thought with id ${req.params.thoughtId}`)
+        await Thought.findOneAndDelete({ _id: req.params.thoughtId }, function (err) {
+            if (err) {
+                res.status(404).json({ message: `could not delete thought ${req.params.thoughtId}` })
+            } else {
+                console.log('thought deleted')
+                res.status(200)
+            }
+        });
+    } catch (err) {
+        res.status(500).json(err);
+    }
+}
 
+// post a reaction in thought's reaction array
 // /api/thoughts/:thoughtId/reactions
-// post create a reaction in thought's reaction array
-// delete remove reaction by reactionid
+/*
+req.body = {
+    reactionBody: "The example reaction text"
+    username: "billyBob"
+}
+*/
+const createReaction = async (req, res) => {
+    try {
+        console.log(`creating reaction with thought id ${req.params.thoughtId}`)
+        const updatedThought = await Thought.findOneAndUpdate({ _id: req.params.thoughtId }, { $push: { reactions: req.body }}, {new: true});
+        if (!updatedThought) {
+            res.status(404).json({ message: `could not create reaction for thought ${req.params.thoughtId}`, body: req.body })
+        } else {
+            console.log('reaction created and added to thought')
+            res.status(200).json(updatedThought)
+        }
+    } catch (err) {
+        res.status(500).json(err);
+    }
+}
+
+// delete reaction by reactionId
+// /api/thoughts/:thoughtId/reactions/:reactionId
+const deleteReaction = async (req, res) => {
+    try {
+        console.log(`deleting reaction with reaction id ${req.params.reactionId}`)
+        const updatedThought = await Thought.findOneAndUpdate({ _id: req.params.thoughtId }, { $pullAll: { reactions: [{ reactionId: req.params.reactionId}] }}, {new: true});
+        if (!updatedThought) {
+            res.status(404).json({ message: `could not delete reaction for thought ${req.params.thoughtId}`, body: req.body })
+        } else {
+            console.log('reaction created and added to thought')
+            res.status(200).json(updatedThought)
+        }
+    } catch (err) {
+        res.status(500).json(err);
+    }
+}
 
 
-module.exports = { getAllThoughts, getThoughtById, newThought }; // export what needs to be exported
+module.exports = { getAllThoughts, getThoughtById, newThought, updateThought, deleteThought, createReaction, deleteReaction }; // export what needs to be exported
