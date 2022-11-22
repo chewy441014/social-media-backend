@@ -7,9 +7,11 @@ const User = require('../models/User');
 // /api/thoughts
 const getAllThoughts = async (req, res) => {
     try {
+        console.log('here')
         const thoughtData = await Thought.find();
         res.status(200).json(thoughtData)
     } catch (err) {
+        console.log(err)
         res.status(500).json(err)
     }
 }
@@ -18,11 +20,11 @@ const getAllThoughts = async (req, res) => {
 // /api/thoughts/:thoughtId
 const getThoughtById = async (req, res) => {
     try {
-        const thoughtData = await User.findOne({ _id: req.params.thoughtId });
+        const thoughtData = await Thought.findOne({ _id: req.params.thoughtId });
         if (thoughtData) {
             res.status(200).json(thoughtData);
         } else {
-            res.status(404).json({ message: `no user id: ${req.params.thoughtId} found` })
+            res.status(404).json({ message: `no thought id: ${req.params.thoughtId} found` })
         }
     } catch (err) {
         res.status(500).json(err)
