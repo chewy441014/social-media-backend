@@ -46,10 +46,10 @@ const newThought = async (req, res) => {
             res.status(400).json({ message: 'could not create new thought', body: req.body })
         } else {
             console.log('thought created, add it to the user')
-            const updatedUser = await User.findOneAndUpdate({ username: req.body.username }, { $push: { thoughts: newThought._id } });
+            const updatedUser = await User.findOneAndUpdate({ username: req.body.username }, { $push: { thoughts: newThought._id } }, {new: true});
             if (updatedUser) {
                 console.log('updated user thoughts array with new thought id')
-                res.status(200).json(updatedUser)
+                res.status(200).json({user: updatedUser, thought: newThought})
             } else {
                 res.status(400).json({ message: `cannot find user ${req.body.username} or issue with ${newThought._id}`, body: newThought })
             }

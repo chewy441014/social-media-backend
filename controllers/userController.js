@@ -90,8 +90,6 @@ const deleteUser = async (req, res) => {
     }
 }
 
-// remove a user's thoughts when deleted BONUS
-
 // post add new friend to friends list
 // /api/users/:userId/friends/:friendId
 const addFriend = async (req, res) => {
