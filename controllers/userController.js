@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const { ObjectId } = require('mongoose').Types;
 
 // setup functions for user api
 
@@ -40,13 +41,11 @@ req.body = {
 */
 const createUser = async (req, res) => {
     try {
-        console.log(req.body);
         const newUser = await User.create(req.body);
         if (!newUser) {
             res.status(404).json({ message: 'could not create new user', body: req.body })
         } else {
-            console.log('user created')
-            res.status(200)
+            res.status(200).json(newUser)
         }
     } catch (err) {
         res.status(500).json(err);
@@ -63,15 +62,14 @@ req.body = {
 */
 const updateUser = async (req, res) => {
     try {
-        await User.findOneAndUpdate({ _id: req.params.userId }, { $set: req.body }, { runValidators: true }, function (err) {
-            if (err) {
-                res.status(404).json({ message: `could not edit user ${req.params.userId}`, body: req.body })
-            } else {
-                console.log('user updated')
-                res.status(200)
-            }
-        });
+        const updatedUser = await User.findOneAndUpdate({ _id: req.params.userId }, { $set: req.body }, { runValidators: true, new: true });
+        if (!updatedUser) {
+            res.status(404).json({ message: `could not edit user ${req.params.userId}`, body: req.body })
+        } else {
+            res.status(200).json(updatedUser)
+        }
     } catch (err) {
+        console.log(err)
         res.status(500).json(err);
     }
 }
@@ -80,14 +78,13 @@ const updateUser = async (req, res) => {
 // /api/users/delete/:userId
 const deleteUser = async (req, res) => {
     try {
-        await User.findOneAndDelete({ _id: req.params.userId }, function (err) {
-            if (err) {
-                res.status(404).json({ message: `could not delete user ${req.params.userId}` })
-            } else {
-                console.log('user deleted')
-                res.status(200)
-            }
-        });
+        const deleted = await User.findOneAndDelete({ _id: req.params.userId })
+        if (!deleted) {
+            res.status(404).json({ message: `could not delete user ${req.params.userId}` })
+        } else {
+            console.log('user deleted')
+            res.status(200).json(deleted);
+        }
     } catch (err) {
         res.status(500).json(err);
     }
@@ -100,20 +97,16 @@ const deleteUser = async (req, res) => {
 const addFriend = async (req, res) => {
     try {
         console.log(`adding a friend to your friends list ${req.params.userId}, friend id ${req.params.friendId}`)
-        const friendExists = await User.findOne({ _id: req.params.friendId });
-        if (friendExists) {
-            await User.findOneAndUpdate({ _id: req.params.userId }, { $push: { friends: req.params.friendId } }, function (err) {
-                if (err) {
-                    res.status(404).json({ message: `could not find user ${req.params.userId}, but friend exists, or something went wrong` })
-                } else {
-                    console.log('friend added')
-                    res.status(200)
-                }
-            });
+        const friendlyUser = await User.findOneAndUpdate({ _id: req.params.userId }, { $addToSet: { friends: ObjectId(req.params.friendId) } }, { new: true });
+        const friendlyFriend = await User.findOneAndUpdate({ _id: req.params.friendId }, { $addToSet: { friends: ObjectId(req.params.userId) } }, { new: true });
+        if (!friendlyUser || !friendlyFriend) {
+            res.status(404).json({ message: `could not find user ${req.params.userId}, but friend exists, or something went wrong` })
         } else {
-            res.status(404).json({ message: `could not find friend ${req.params.friendId}` })
+            console.log('friend added')
+            res.status(200).json({ user: friendlyUser, friend: friendlyFriend })
         }
     } catch (err) {
+        console.log(err)
         res.status(500).json(err);
     }
 }
@@ -123,20 +116,15 @@ const addFriend = async (req, res) => {
 const deleteFriend = async (req, res) => {
     try {
         console.log(`removing a friend from your friends list ${req.params.userId}, friend id ${req.params.friendId}`)
-        const friendExists = await User.findOne({ _id: req.params.friendId });
-        // add check to see if friend is in user's friend list? 
-        if (friendExists) {
-            const updatedUser = await User.findOneAndUpdate({ _id: req.params.userId }, { $pullAll: { friends: [{ _id: req.params.friendId }] } }, { new: true }, function (err) {
-                if (err) {
-                    res.status(404).json({ message: `could not find user ${req.params.userId}, but friend exists, or maybe they're not friends` })
-                } else {
-                    res.status(200).json(updatedUser)
-                }
-            });
+        const updatedUser = await User.findOneAndUpdate({ _id: req.params.userId }, { $pullAll: { friends: [ ObjectId(req.params.friendId) ] } }, { new: true });
+        const updatedFriend = await User.findOneAndUpdate({ _id: req.params.friendId }, { $pullAll: { friends: [ ObjectId(req.params.userId) ] } }, { new: true });
+        if (!updatedUser || !updatedFriend) {
+            res.status(404).json({ message: `could not find user ${req.params.userId}, or friend doesn't exist, or maybe they're not friends` })
         } else {
-            res.status(404).json({ message: `could not find friend ${req.params.friendId}` })
+            res.status(200).json({user: updatedUser, exFriend: updatedFriend});
         }
     } catch (err) {
+        console.log(err)
         res.status(500).json(err);
     }
 }

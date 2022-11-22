@@ -1,5 +1,6 @@
 const Thought = require('../models/Thought');
 const User = require('../models/User');
+const { ObjectId } = require('mongoose').Types;
 
 // setup functions for user api
 
@@ -7,11 +8,9 @@ const User = require('../models/User');
 // /api/thoughts
 const getAllThoughts = async (req, res) => {
     try {
-        console.log('here')
         const thoughtData = await Thought.find();
         res.status(200).json(thoughtData)
     } catch (err) {
-        console.log(err)
         res.status(500).json(err)
     }
 }
@@ -50,7 +49,7 @@ const newThought = async (req, res) => {
             const updatedUser = await User.findOneAndUpdate({ username: req.body.username }, { $push: { thoughts: newThought._id } });
             if (updatedUser) {
                 console.log('updated user thoughts array with new thought id')
-                res.status(200)
+                res.status(200).json(updatedUser)
             } else {
                 res.status(400).json({ message: `cannot find user ${req.body.username} or issue with ${newThought._id}`, body: newThought })
             }
@@ -88,14 +87,13 @@ const updateThought = async (req, res) => {
 const deleteThought = async (req, res) => {
     try {
         console.log(`deleting thought with id ${req.params.thoughtId}`)
-        await Thought.findOneAndDelete({ _id: req.params.thoughtId }, function (err) {
-            if (err) {
-                res.status(404).json({ message: `could not delete thought ${req.params.thoughtId}` })
-            } else {
-                console.log('thought deleted')
-                res.status(200)
-            }
-        });
+        const updatedThought = await Thought.findOneAndDelete({ _id: req.params.thoughtId });
+        if (!updatedThought) {
+            res.status(404).json({ message: `could not delete thought ${req.params.thoughtId}` })
+        } else {
+            console.log('thought deleted')
+            res.status(200).json(updatedThought);
+        }
     } catch (err) {
         res.status(500).json(err);
     }
@@ -112,7 +110,7 @@ req.body = {
 const createReaction = async (req, res) => {
     try {
         console.log(`creating reaction with thought id ${req.params.thoughtId}`)
-        const updatedThought = await Thought.findOneAndUpdate({ _id: req.params.thoughtId }, { $push: { reactions: req.body }}, {new: true});
+        const updatedThought = await Thought.findOneAndUpdate({ _id: req.params.thoughtId }, { $push: { reactions: req.body } }, { new: true });
         if (!updatedThought) {
             res.status(404).json({ message: `could not create reaction for thought ${req.params.thoughtId}`, body: req.body })
         } else {
@@ -129,11 +127,11 @@ const createReaction = async (req, res) => {
 const deleteReaction = async (req, res) => {
     try {
         console.log(`deleting reaction with reaction id ${req.params.reactionId}`)
-        const updatedThought = await Thought.findOneAndUpdate({ _id: req.params.thoughtId }, { $pullAll: { reactions: [{ reactionId: req.params.reactionId}] }}, {new: true});
+        const updatedThought = await Thought.findOneAndUpdate({ _id: req.params.thoughtId }, { $pull: { reactions: { reactionId: ObjectId(req.params.reactionId) } } }, { new: true });
         if (!updatedThought) {
             res.status(404).json({ message: `could not delete reaction for thought ${req.params.thoughtId}`, body: req.body })
         } else {
-            console.log('reaction created and added to thought')
+            console.log('reaction deleted')
             res.status(200).json(updatedThought)
         }
     } catch (err) {

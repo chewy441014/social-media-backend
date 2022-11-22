@@ -7,11 +7,11 @@ const reactionSchema = new Schema(
         reactionId: {type: mongoose.Types.ObjectId, default: new mongoose.Types.ObjectId() },
         reactionBody: { type: String, required: true, minLength: 1, maxLength: 280 },
         username: { type: String, required: true },
-        createdAt: { type: Date, default: new Date }
+        createdAt: { type: Date, default: new Date, get: formatDate }
     },
     {
         toJSON: {
-            virtuals: true,
+            getters: true,
         },
         id: false
     }
@@ -20,16 +20,20 @@ const reactionSchema = new Schema(
 const thoughtSchema = new Schema(
     {
         thoughtText: { type: String, required: true, minLength: 1, maxLength: 280 },
-        createdAt: { type: Date, default: new Date },
+        createdAt: { type: Date, default: new Date, get: formatDate},
         username: { type: String, required: true },
         reactions: [reactionSchema]
     },
     {
         toJSON: {
-            virtuals: true,
+            getters: true,
         }
     }
 );
+
+function formatDate(createdAt) {
+    return createdAt.toDateString();
+}
 
 // Create a virtual property `reactionCount` that gets the thoughts number of reactions
 thoughtSchema.virtual('reactionCount')
