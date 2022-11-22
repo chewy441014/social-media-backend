@@ -35,7 +35,9 @@ To run the app. After this, navigate to Insomnia or equivalent and make the requ
   ## Usage information 
   <a name="usage"></a>  
    
-To use this app, you need to have an application like [Insomnia](https://insomnia.rest/download) to make all the requests to the server. If you have it installed, you can set it up in accordance with the routes in the repository files, or mimick the demo.   
+To use this app, you need to have an application like [Insomnia](https://insomnia.rest/download) to make all the requests to the server. If you have it installed, you can set it up in accordance with the routes in the repository files, or mimick the demo below: 
+
+![social-media-backend-slow](https://user-images.githubusercontent.com/6627972/203387627-8e90f905-8283-4f51-bbb3-02a6ec583153.gif)
    
   ## License 
   <a name="lic"></a>  
